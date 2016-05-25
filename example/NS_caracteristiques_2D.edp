@@ -1,0 +1,100 @@
+/*
+NS_caracteristiques_2D.edp, solve numerically the Navier-Stokes equations with FreeFem++
+Copyright (C) 2016  Simon Garnotel
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+
+//Construction du Maillage
+int nn = 10;
+
+real L = 5.;
+real D = 1.;
+
+int wall = 1;
+int inlet = 2;
+int outlet = 3;
+
+border b1(t=0., 1.){x=L*t; y=0.; label=wall;};
+border b2(t=0., 1.){x=L; y=D*t; label=outlet;};
+border b3(t=0., 1.){x=L-L*t; y=D; label=wall;};
+border b4(t=0., 1.){x=0.; y=D-D*t; label=inlet;};
+
+int nnL = max(2., L*nn);
+int nnD = max(2., D*nn);
+
+mesh Th = buildmesh(b1(nnL) + b2(nnD) + b3(nnL) + b4(nnD));
+plot(Th, cmm="Maillage");
+
+
+//Espaces éléments finis
+fespace Uh(Th, P2);
+Uh u1, u2;
+Uh u1old, u2old;
+Uh v1, v2;
+
+fespace Ph(Th, P1);
+Ph p;
+Ph q;
+
+
+//Définition du problème
+real rho = 1.;
+real mu = 1.;
+
+real T = 1.;
+real dt = 1.e-2;
+
+func f1 = 0.;
+func f2 = 0.;
+
+real t = 0.;
+
+problem NS ([u1, u2, p],[v1, v2, q])
+	= int2d(Th)(
+		  (1./dt) * ( u1*v1 + u2*v2 )
+		+ mu * (
+			  dx(u1)*dx(v1) + dy(u1)*dy(v1)
+			+ dx(u2)*dx(v2) + dy(u2)*dy(v2)
+			)
+		- p*q*1.e-9
+		- p*dx(v1) - p*dy(v2)
+		- dx(u1)*q - dy(u2)*q
+		)
+	- int2d(Th)(
+		  (1./dt) * convect([u1old,u2old], -dt, u1old) * v1
+		+ (1./dt) * convect([u1old,u2old], -dt, u2old) * v2
+		)
+	- int2d(Th)( f1*v1 + f2*v2 )
+	+ on(inlet, u1=cos(2.*pi*t)*(1.-(y-D/2.)^2/(D/2.)^2), u2=0.)
+	+ on(wall, u1=0., u2=0.)
+	;
+
+
+//Résolution
+for (int i = 0; i < T/dt; i++){
+	//Mise à jour
+	t += dt;
+	u1old = u1;
+	u2old = u2;
+	
+	//Résolution
+	NS;
+	plot(p, cmm="Pression - t = "+t, WindowIndex=1);
+	plot([u1, u2], cmm="Vitesse - t = "+t, WindowIndex=2);
+}
+
+
+
