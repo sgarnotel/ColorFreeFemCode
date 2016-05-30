@@ -117,7 +117,7 @@ void DialogSettings::__PdfLatex(){
 
 void DialogSettings::__PdfViewer(){
     QString PdfViewer = QFileDialog::getOpenFileName(this, "Select the PDF viewer", "/");
-    if (!PdfViewer.isEmpty()) LineEditPdfLatex->setText(PdfViewer);
+    if (!PdfViewer.isEmpty()) LineEditPdfViewer->setText(PdfViewer);
 }
 
 void DialogSettings::__Cancel(){
