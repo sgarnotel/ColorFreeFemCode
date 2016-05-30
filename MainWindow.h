@@ -27,6 +27,7 @@
 #define MAINWINDOW_H
 
 #include "header.h"
+#include "dialogsettings.h"
 
 class MainWindow : public QMainWindow
 {
@@ -35,6 +36,23 @@ public:
     explicit MainWindow(QWidget *parent = 0);
 
 private:
+    //Method
+    void InitVar();
+    void InitWin();
+    void InitSig();
+    void InitCss();
+
+    void closeEvent(QCloseEvent *);
+
+    //Menu
+    QMenu *MenuEdit;
+    QMenu *MenuHelp;
+
+    //Action
+    QAction *ActionEditSettings;
+    QAction *ActionHelpAboutQt;
+    QAction *ActionHelpAbout;
+
     //Widget
     QWidget *CentralWidget;
 
@@ -63,21 +81,24 @@ private:
     QProcess *ProcessPdfLatex;
     QProcess *ProcessEvince;
 
+    //String
+    QString StringDirectory;
+    QString StringLatex;
+    QString StringLatexOption;
+    QString StringViewer;
+
 signals:
 
 public slots:
 
 private slots:
-    void InitVar();
-    void InitWin();
-    void InitSig();
-    void InitCss();
-
     void __ButtonEdpFile();
     void __ButtonTexFile();
     void __ButtonEdp2Tex();
 
-    void closeEvent(QCloseEvent *);
+    void __Settings();
+    void __AboutQt();
+    void __About();
 };
 
 #endif // MAINWINDOW_H
