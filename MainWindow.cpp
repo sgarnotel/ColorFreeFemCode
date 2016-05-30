@@ -31,6 +31,15 @@
  * Initialisation of QtWidgets
  */
 void MainWindow::InitVar(){
+    //Menu
+    MenuEdit = menuBar()->addMenu("Edit");
+    MenuHelp = menuBar()->addMenu("Help");
+
+    //Action
+    ActionEditSettings = new QAction(this);
+    ActionHelpAboutQt = new QAction(this);
+    ActionHelpAbout = new QAction(this);
+
     //Widget
     CentralWidget = new QWidget(this);
 
@@ -58,6 +67,12 @@ void MainWindow::InitVar(){
     //Process
     ProcessPdfLatex = new QProcess(CentralWidget);
     ProcessEvince = new QProcess(CentralWidget);
+
+    //String
+    StringDirectory = DEFAULT_DIRECTORY;
+    StringLatex = DEFAULT_PDF_LATEX;
+    StringLatexOption = DEFAULT_PDF_LATEX_OPTIONS;
+    StringViewer = DEFAULT_PDF_VIEWER;
 }
 
 /*!
@@ -69,6 +84,19 @@ void MainWindow::InitWin(){
     //Widget
     setCentralWidget(CentralWidget);
     CentralWidget->setLayout(Grid);
+
+    //Menu
+    MenuEdit->addAction(ActionEditSettings);
+    MenuHelp->addAction(ActionHelpAboutQt);
+    MenuHelp->addAction(ActionHelpAbout);
+
+    //Action
+    ActionEditSettings->setText("Settings");
+    ActionEditSettings->setIcon(QIcon("img/settings.png"));
+    ActionHelpAboutQt->setText("About Qt");
+    ActionHelpAboutQt->setIcon(QIcon("img/Qt.png"));
+    ActionHelpAbout->setText("About ColorFreeFemCode");
+    ActionHelpAbout->setIcon(QIcon("img/freefem.png"));
 
     //Grid
     Grid->addWidget(LabelEdpFile, 10, 10, 1, 1);
@@ -103,6 +131,31 @@ void MainWindow::InitWin(){
     CheckBoxGroup->setExclusive(false);
     CheckBoxAutoCompile->setText("Compile Latex");
     CheckBoxAutoRead->setText("Read PDF");
+
+    //String
+    {
+        QString TMPDirectory;
+        bool Res = GetDirectory(&TMPDirectory);
+        if (Res){
+            StringDirectory = TMPDirectory;
+        }
+    }
+    {
+        QString TMPLatex;
+        QString TMPLatexOption;
+        bool Res = GetPdfLatex(&TMPLatex, &TMPLatexOption);
+        if (Res){
+            StringLatex = TMPLatex;
+            StringLatexOption = TMPLatexOption;
+        }
+    }
+    {
+        QString TMPViewer;
+        bool Res = GetPdfViewer(&TMPViewer);
+        if (Res){
+            StringViewer = TMPViewer;
+        }
+    }
 }
 
 /*!
@@ -115,6 +168,11 @@ void MainWindow::InitSig(){
     connect(ButtonEdpFile, SIGNAL(clicked()), this, SLOT(__ButtonEdpFile()));
     connect(ButtonTexFile, SIGNAL(clicked()), this, SLOT(__ButtonTexFile()));
     connect(ButtonEdp2Tex, SIGNAL(clicked()), this, SLOT(__ButtonEdp2Tex()));
+
+    //Action
+    connect(ActionEditSettings, SIGNAL(triggered(bool)), this, SLOT(__Settings()));
+    connect(ActionHelpAboutQt, SIGNAL(triggered(bool)), this, SLOT(__AboutQt()));
+    connect(ActionHelpAbout, SIGNAL(triggered(bool)), this, SLOT(__About()));
 }
 
 /*!
@@ -123,7 +181,17 @@ void MainWindow::InitSig(){
  * Declaration of CSS Style Sheet
  */
 void MainWindow::InitCss(){
-    //
+    //Window
+    setWindowTitle("ColorFreeFemCode - version 1.0");
+    setWindowIcon(QIcon("img/freefem.png"));
+}
+
+/*!
+ * \brief MainWindow::closeEvent
+ */
+void MainWindow::closeEvent(QCloseEvent *){
+    //Process
+    //TODO: avoid "QProcess: Destroyed while process ("evince") is still running."
 }
 
 /*!
@@ -147,7 +215,7 @@ MainWindow::MainWindow(QWidget *parent) :
  * Click on ButtonEdpFile
  */
 void MainWindow::__ButtonEdpFile(){
-    QString EdpFile = QFileDialog::getOpenFileName(this, "Select a FreeFem++ .edp file", "../../edp", "FreeFem++ (*.edp)");
+    QString EdpFile = QFileDialog::getOpenFileName(this, "Select a FreeFem++ .edp file", StringDirectory, "FreeFem++ (*.edp)");
     if (!EdpFile.isEmpty()){
         LineEdpFile->setText(EdpFile);
     }
@@ -159,7 +227,7 @@ void MainWindow::__ButtonEdpFile(){
  * Click on ButtonTexFile
  */
 void MainWindow::__ButtonTexFile(){
-    QString TexFile = QFileDialog::getSaveFileName(this, "Select a Latex .tex file name", "../../tex", "Latex (*.tex)");
+    QString TexFile = QFileDialog::getSaveFileName(this, "Select a Latex .tex file name", StringDirectory, "Latex (*.tex)");
     if (!TexFile.isEmpty()){
         LineTexFile->setText(TexFile);
     }
@@ -189,7 +257,7 @@ void MainWindow::__ButtonEdp2Tex(){
     }
 
     if (CheckBoxAutoCompile->isChecked()){
-        QString Program = "pdflatex";
+        QString Program = StringLatex;
 
         QString Directory = QString(TexFile);
         {
@@ -198,7 +266,7 @@ void MainWindow::__ButtonEdp2Tex(){
         }
 
         QStringList Arguments;
-        Arguments.append("-interaction=nonstopmode");
+        Arguments.append(StringLatexOption);
         Arguments.append("-output-directory="+Directory);
         Arguments.append(TexFile);
 
@@ -211,7 +279,7 @@ void MainWindow::__ButtonEdp2Tex(){
     }
 
     if (CheckBoxAutoRead->isChecked()){
-        QString Program = "evince";
+        QString Program = StringViewer;
 
         QString PdfFile = QString(TexFile);
         {
@@ -226,9 +294,57 @@ void MainWindow::__ButtonEdp2Tex(){
     }
 }
 
-void MainWindow::closeEvent(QCloseEvent *){
-    //Process
-    //TODO: avoid "QProcess: Destroyed while process ("evince") is still running."
+/*!
+ * \brief MainWindow::__Settings
+ */
+void MainWindow::__Settings(){
+    DialogSettings *dialog = new DialogSettings(this);
+    int Results = dialog->exec();
+    if (Results == QDialog::Accepted){
+        {
+            QString TMPDirectory;
+            bool Res = GetDirectory(&TMPDirectory);
+            if (Res){
+                StringDirectory = TMPDirectory;
+            }
+        }
+        {
+            QString TMPLatex;
+            QString TMPLatexOption;
+            bool Res = GetPdfLatex(&TMPLatex, &TMPLatexOption);
+            if (Res){
+                StringLatex = TMPLatex;
+                StringLatexOption = TMPLatexOption;
+            }
+        }
+        {
+            QString TMPViewer;
+            bool Res = GetPdfViewer(&TMPViewer);
+            if (Res){
+                StringViewer = TMPViewer;
+            }
+        }
+    }
 }
 
+/*!
+ * \brief MainWindow::__AboutQt
+ */
+void MainWindow::__AboutQt(){
+    QMessageBox::aboutQt(this, "About Qt");
+}
 
+/*!
+ * \brief MainWindow::__About
+ */
+void MainWindow::__About(){
+    QString text = "<h1>ColorFreeFemCode</h1>"
+            "ColorFreeFemCode provide an open source solution to convert FreeFem++ code (.edp) in a colored LateX document<br/><br/>"
+            "This software is licensed under GNU GPL version 3<br/><br/>"
+            "Thank to :"
+            "<ul><li>Everaldo Coelho for the Crystal Clear icon set</li></ul><br/>"
+            "Author: Simon Garnotel<br/>"
+            "Year: 2016<br/>"
+            "Version: 1.0";
+    QMessageBox::about(this, "About ColorFreeFemCode", text);
+}
