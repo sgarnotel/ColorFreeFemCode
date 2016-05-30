@@ -30,6 +30,11 @@
 
 #include <QtWidgets>
 
+#define DEFAULT_DIRECTORY           "/home"
+#define DEFAULT_PDF_LATEX           "pdflatex"
+#define DEFAULT_PDF_LATEX_OPTIONS   "-interaction=nonstopmode"
+#define DEFAULT_PDF_VIEWER          "evince"
+
 //FreeFemDefinitions
 QStringList *getSeparators(unsigned int *NbSeparators);
 QStringList *getComments(unsigned int *NbComments);
@@ -47,6 +52,14 @@ int indexOf(const QString string, const QStringList *separators, const int from=
 
 //Edp2Tex
 bool Edp2Tex(const QString EdpFileName, const QString TexFileName);
+
+//io
+bool SetDirectory(const QString Directory);
+bool GetDirectory(QString *Directory);
+bool SetPdfLatex(const QString Latex, const QString LatexOption);
+bool GetPdfLatex(QString *Latex, QString *LatexOption);
+bool SetPdfViewer(const QString Viewer);
+bool GetPdfViewer(QString *Viewer);
 
 #endif // HEADER_H
 
