@@ -93,6 +93,7 @@ QStringList *getTypes(unsigned int *NbTypes){
     Types->append("include");
     Types->append("int");
     Types->append("load");
+    Types->append("macro");
     Types->append("matrix");
     Types->append("mesh");
     Types->append("mesh3");
